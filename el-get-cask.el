@@ -83,7 +83,8 @@
                          el-get-cask-default-cask-file-name)))
   (let* ((file (or file el-get-cask-default-cask-file))
          (file (expand-file-name file)))
-    (el-get-cask-with-dsl (source depends-on)
+    (el-get-cask-with-dsl (source depends-on
+                           files package package-file development)
       (load file)
       (dolist (source el-get-cask-sources)
         (add-to-list 'package-archives source t))

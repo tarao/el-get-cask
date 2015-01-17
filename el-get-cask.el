@@ -26,13 +26,14 @@
 ;;; Code:
 
 (require 'package)
-(require 'el-get)
 (eval-when-compile (require 'cl))
 
 (defconst el-get-cask-default-cask-file-name "Cask")
 
 (defconst el-get-cask-default-cask-file
   (locate-user-emacs-file el-get-cask-default-cask-file-name))
+
+(defconst el-get-cask-dir ".el-get-cask")
 
 (defconst el-get-cask-source-alist
   '((gnu          . "http://elpa.gnu.org/packages/")
@@ -52,6 +53,16 @@
 
 (defvar el-get-cask-sources nil)
 (defvar el-get-cask-packages nil)
+
+(defun el-get-cask--require-el-get (dir)
+  (let ((el-get-dir dir))
+    (add-to-list 'load-path (expand-file-name "el-get" el-get-dir))
+    (unless (require 'el-get nil 'noerror)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "http://raw.github.com/dimitri/el-get/master/el-get-install.el")
+        (goto-char (point-max))
+        (eval-print-last-sexp)))))
 
 (defun el-get-cask--args (args)
   (let ((type 'elpa) props)
@@ -82,7 +93,11 @@
    (list (read-file-name "Cask file:" user-emacs-directory
                          el-get-cask-default-cask-file-name)))
   (let* ((file (or file el-get-cask-default-cask-file))
-         (file (expand-file-name file)))
+         (file (expand-file-name file))
+         (base-dir (file-name-directory file))
+         (el-get-dir (expand-file-name el-get-cask-dir base-dir))
+         (package-user-dir (expand-file-name`"elpa" el-get-dir)))
+    (el-get-cask--require-el-get el-get-dir)
     (el-get-cask-with-dsl (source depends-on
                            files package package-file development)
       (load file)

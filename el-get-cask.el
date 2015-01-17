@@ -81,7 +81,7 @@
     (symbol-function ',(intern (format "el-get-cask-%s" name)))))
 
 (defmacro el-get-cask-with-dsl (commands &rest form)
-  (declare (ident 1) (debug 1))
+  (declare (indent 1) (debug 1))
   (let ((pairs (mapcar #'el-get-cask--dsl-func-pair commands)))
     `(cl-letf (,@pairs)
        ,@form)))

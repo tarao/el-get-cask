@@ -118,12 +118,13 @@
 ;;;###autoload
 (defmacro el-get-cask-source (name-or-alias &optional url)
   "Add a package mirror named NAME-OR-ALIAS."
-  (let ((pair (assq name-or-alias el-get-cask-source-alist)))
-    (when (and (not url) pair)
-      (setq name-or-alias (symbol-name (car pair))
-            url (cdr pair)))
-    `(when (and ,name-or-alias ,url)
-       (add-to-list 'el-get-cask-sources (cons ,name-or-alias ,url) t))))
+  (if (and (symbolp name-or-alias) (eq name-or-alias 'el-get))
+      (setq el-get-cask-default-type nil)
+    (let ((pair (assq name-or-alias el-get-cask-source-alist)))
+      (when (and (not url) pair)
+        (setq name-or-alias (symbol-name (car pair))
+              url (cdr pair)))
+      `(add-to-list 'el-get-cask-sources (cons ',name-or-alias ',url) t))))
 
 ;;;###autoload
 (defmacro el-get-cask-depends-on (name &rest args)
@@ -132,7 +133,6 @@
   (let ((name (if (stringp name) (intern name)
            (or (and (listp package) (nth 1 package)) package)))
         (args (el-get-cask--args args)))
-    (print (list name args))
     `(add-to-list 'el-get-cask-packages '(,name ,@args) t)))
 
 ;;;###autoload

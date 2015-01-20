@@ -28,27 +28,25 @@ Then, place a file named `Cask` in the directory where your emacs init
 file is located.  The contents of the file is Cask [DSL][].
 
 Next time you run your Emacs, packages defined in `Cask` file are
-installed.
+installed. You can also use [El-Get][] commands such as
+`el-get-install` or `el-get-update` as usual.
 
-## [El-Get][] integration
+All the packages are installed in `.el-get-cask` directory under the
+same directory where `Cask` file is located.  `el-get-dir` variable is
+overridden to this directory to make [El-Get][] work.  In this case,
+packages maintained by `package.el` are installed in
+`.el-get-cask/elpa` and `package-user-dir` variable is overriden to
+this directory.
 
-If you want to use commands from [El-Get][], then you will need some
-more configuration.  Write the following code after
-`(el-get-cask-load)` in your emacs init file.
+## [El-Get][] Compatible Mode
 
-```lisp
-(setq el-get-dir (expand-file-name ".el-get-cask" user-emacs-directory)
-      package-user-dir (expand-file-name "elpa" el-get-dir))
-```
-
-This overrides the global configuration for `el-get.el` and
-`package.el`.  Do this only if you won't use them without
-`el-get-cask`.
-
-Instead of doing this, consider translating `depends-on` in `Cask`
-file into `el-get-bundle` in your Emacs init file and use [El-Get][]
-without `el-get-cask`.  This is a better way to manage your packages
-without harm.
+If you have [El-Get][] installed and required before `el-get-cask` is
+loaded, then `el-get-cask` works as [El-Get][] compatible mode.  In
+this mode, no directory overriding for `el-get-dir` and
+`package-user-dir` happen, and, the default source type is not
+restricted to `elpa` in `depends-on` notation, i.e., the source type
+is taken from an [El-Get][] recipe unless you explicitly specify it by
+a `:type` property or a `TYPE:` modifier.
 
 ## Limitations
 

@@ -43,6 +43,8 @@
     (SC           . "http://joseito.republika.pl/sunrise-commander/")
     (org          . "http://orgmode.org/elpa/")))
 
+(defconst el-get-cask-emulate-default-type 'elpa)
+
 (defconst el-get-cask-fetchers
   '(:git :bzr :darcs :svn :cvs))
 
@@ -53,6 +55,7 @@
 
 (defvar el-get-cask-sources nil)
 (defvar el-get-cask-packages nil)
+(defvar el-get-cask-default-type nil)
 
 (defun el-get-cask--require-el-get (dir)
   (let ((el-get-dir dir))
@@ -65,7 +68,7 @@
         (eval-print-last-sexp)))))
 
 (defun el-get-cask--args (args)
-  (let ((type 'elpa) props)
+  (let ((type el-get-cask-default-type) props)
     (while (keywordp (nth 0 args))
       (let* ((kwd (nth 0 args))
              (prop (cdr (assq kwd el-get-cask-prop-alist))))
@@ -74,7 +77,9 @@
         (when prop
           (setq props (plist-put props prop (nth 1 args))))
         (setq args (cddr args))))
-    (list* :type type props)))
+    (append (if type
+                (list* :type type props)
+              props) args)))
 
 (defun el-get-cask--dsl-func-pair (name)
   `((symbol-function ',name)
@@ -95,7 +100,9 @@
   (let* ((file (or file el-get-cask-default-cask-file))
          (file (expand-file-name file))
          (base-dir (file-name-directory file))
-         (el-get-installed (bound-and-true-p el-get-dir)))
+         (el-get-installed (bound-and-true-p el-get-dir))
+         (el-get-cask-default-type (and (not el-get-installed)
+                                        el-get-cask-emulate-default-type)))
     (unless el-get-installed
       (setq el-get-dir (expand-file-name el-get-cask-dir base-dir)
             package-user-dir (expand-file-name "elpa" el-get-dir)))
@@ -121,6 +128,7 @@
 ;;;###autoload
 (defmacro el-get-cask-depends-on (name &rest args)
   "Add a dependency."
+  (declare (indent 1) (debug 1))
   (let ((name (if (stringp name) (intern name)
            (or (and (listp package) (nth 1 package)) package)))
         (args (el-get-cask--args args)))

@@ -95,8 +95,10 @@
   (let* ((file (or file el-get-cask-default-cask-file))
          (file (expand-file-name file))
          (base-dir (file-name-directory file))
-         (el-get-dir (expand-file-name el-get-cask-dir base-dir))
-         (package-user-dir (expand-file-name "elpa" el-get-dir)))
+         (el-get-installed (bound-and-true-p el-get-dir)))
+    (unless el-get-installed
+      (setq el-get-dir (expand-file-name el-get-cask-dir base-dir)
+            package-user-dir (expand-file-name "elpa" el-get-dir)))
     (el-get-cask--require-el-get el-get-dir)
     (el-get-cask-with-dsl (source depends-on
                            files package package-file development)

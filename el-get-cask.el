@@ -55,20 +55,23 @@
 
 (defvar el-get-cask-sources nil)
 (defvar el-get-cask-packages nil)
-(defvar el-get-cask-default-type nil)
+(defvar el-get-cask-compatible-mode nil)
 
-(defun el-get-cask--require-el-get (dir)
-  (let ((el-get-dir dir))
-    (add-to-list 'load-path (expand-file-name "el-get" el-get-dir))
-    (unless (require 'el-get nil 'noerror)
-      (with-current-buffer
-          (url-retrieve-synchronously
-           "http://raw.github.com/dimitri/el-get/master/el-get-install.el")
-        (goto-char (point-max))
-        (eval-print-last-sexp)))))
+(defun el-get-cask--require-el-get ()
+  (let ((el-get-dir (or (bound-and-true-p el-get-dir)
+                        (locate-user-emacs-file "el-get"))))
+    (add-to-list 'load-path (expand-file-name "el-get" el-get-dir)))
+  (unless (require 'el-get nil 'noerror)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "http://raw.github.com/dimitri/el-get/master/el-get-install.el")
+      (goto-char (point-max))
+      (eval-print-last-sexp))))
 
 (defun el-get-cask--args (args)
-  (let ((type el-get-cask-default-type) props)
+  (let ((type (and (not el-get-cask-compatible-mode)
+                   el-get-cask-emulate-default-type))
+        props)
     (while (keywordp (nth 0 args))
       (let* ((kwd (nth 0 args))
              (prop (cdr (assq kwd el-get-cask-prop-alist))))
@@ -100,16 +103,15 @@
   (let* ((file (or file el-get-cask-default-cask-file))
          (file (expand-file-name file))
          (base-dir (file-name-directory file))
-         (el-get-installed (bound-and-true-p el-get-dir))
-         (el-get-cask-default-type (and (not el-get-installed)
-                                        el-get-cask-emulate-default-type)))
-    (unless el-get-installed
-      (setq el-get-dir (expand-file-name el-get-cask-dir base-dir)
-            package-user-dir (expand-file-name "elpa" el-get-dir)))
-    (el-get-cask--require-el-get el-get-dir)
+         (el-get-cask-compatible-mode nil)
+         (el-get-cask-sources nil))
     (el-get-cask-with-dsl (source depends-on
                            files package package-file development)
       (load file)
+      (unless el-get-cask-compatible-mode
+        (setq el-get-dir (expand-file-name el-get-cask-dir base-dir)
+              package-user-dir (expand-file-name "elpa" el-get-dir)))
+      (el-get-cask--require-el-get)
       (dolist (source el-get-cask-sources)
         (add-to-list 'package-archives source t))
       (dolist (defs el-get-cask-packages)
@@ -118,13 +120,15 @@
 ;;;###autoload
 (defmacro el-get-cask-source (name-or-alias &optional url)
   "Add a package mirror named NAME-OR-ALIAS."
-  (if (and (symbolp name-or-alias) (eq name-or-alias 'el-get))
-      (setq el-get-cask-default-type nil)
-    (let ((pair (assq name-or-alias el-get-cask-source-alist)))
-      (when (and (not url) pair)
-        (setq name-or-alias (symbol-name (car pair))
-              url (cdr pair)))
-      `(add-to-list 'el-get-cask-sources (cons ',name-or-alias ',url) t))))
+  (when (stringp name-or-alias) (setq (intern name-or-alias)))
+  (when (listp name-or-alias) (setq (name-or-alias (nth 1 name-or-alias))))
+  (when (eq name-or-alias 'el-get) (setq el-get-cask-compatible-mode t))
+  `(let ((name ',name-or-alias) (url ',url))
+     (let ((pair (assq name el-get-cask-source-alist)))
+       (when (and (not url) pair)
+         (setq name (car pair)
+               url (cdr pair)))
+       (add-to-list 'el-get-cask-sources (cons (symbol-name name) url) t))))
 
 ;;;###autoload
 (defmacro el-get-cask-depends-on (name &rest args)

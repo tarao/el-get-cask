@@ -28,25 +28,44 @@ Then, place a file named `Cask` in the directory where your emacs init
 file is located.  The contents of the file is Cask [DSL][].
 
 Next time you run your Emacs, packages defined in `Cask` file are
-installed. You can also use [El-Get][] commands such as
+installed.  You can also use [El-Get][] commands such as
 `el-get-install` or `el-get-update` as usual.
 
-All the packages are installed in `.el-get-cask` directory under the
-same directory where `Cask` file is located.  `el-get-dir` variable is
-overridden to this directory to make [El-Get][] work.  In this case,
-packages maintained by `package.el` are installed in
-`.el-get-cask/elpa` and `package-user-dir` variable is overriden to
-this directory.
+## Directory to install
 
-## [El-Get][] Compatible Mode
+If you are not using [El-Get][] directly, all the packages are
+installed in `.el-get-cask` directory under the same directory where
+`Cask` file is located.  `el-get-dir` variable is overridden to this
+directory to make [El-Get][] work.  In this case, packages maintained
+by `package.el` are installed in `.el-get-cask/elpa` and
+`package-user-dir` variable is overriden to this directory.
 
-If you have [El-Get][] installed and required before `el-get-cask` is
-loaded, then `el-get-cask` works as [El-Get][] compatible mode.  In
-this mode, no directory overriding for `el-get-dir` and
-`package-user-dir` happen, and, the default source type is not
-restricted to `elpa` in `depends-on` notation, i.e., the source type
-is taken from an [El-Get][] recipe unless you explicitly specify it by
-a `:type` property or a `TYPE:` modifier.
+Otherwise, if you have [El-Get][] installed before loading
+`el-get-cask`, then the directory settings of [El-Get][] and
+`package.el` are used (they are `~/.emcas.d/el-get` and
+`~/.emacs.d/elpa` by default).
+
+## Using [El-Get][] sources
+
+In addition to the `package.el` sources, [El-Get][] sources (recipes)
+can be added by `source` DSL command as the following code.
+
+```elisp
+(source el-get)
+```
+
+If you add [El-Get][] sources, `depends-on` command installs a package
+from an [El-Get][] source if available.  When there is no package
+vailable in [El-Get][] recipes, `depends-on` falls back to a
+`package.el` source.
+
+## Extended notation
+
+With `el-get-cask`, `depends-on` is just a syntactic sugar for
+`el-get-bundle`.  All notation for `el-get-bundle` including package
+name modifiers and an initialization form are available for
+`depends-on` command.  See the documentation of `el-get-bundle` for
+the detail.
 
 ## Limitations
 

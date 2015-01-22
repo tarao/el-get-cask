@@ -43,8 +43,6 @@
     (SC           . "http://joseito.republika.pl/sunrise-commander/")
     (org          . "http://orgmode.org/elpa/")))
 
-(defconst el-get-cask-emulate-default-type 'elpa)
-
 (defconst el-get-cask-fetchers
   '(:git :bzr :darcs :svn :cvs))
 
@@ -66,23 +64,28 @@
         (url-retrieve-synchronously
          "http://raw.github.com/dimitri/el-get/master/el-get-install.el")
       (goto-char (point-max))
-      (eval-print-last-sexp))))
+      (eval-print-last-sexp)))
+  (require 'el-get-bundle))
 
-(defun el-get-cask--args (args)
-  (let ((type (and (not el-get-cask-compatible-mode)
-                   el-get-cask-emulate-default-type))
-        props)
+(defun el-get-cask--args (name args)
+  (let (type props)
     (while (keywordp (nth 0 args))
       (let* ((kwd (nth 0 args))
              (prop (cdr (assq kwd el-get-cask-prop-alist))))
-        (when (memq kwd el-get-cask-fetchers)
-          (setq type (intern (substring (symbol-name kwd) 1))))
-        (when prop
-          (setq props (plist-put props prop (nth 1 args))))
+        (if (memq kwd el-get-cask-fetchers)
+            (setq type (intern (substring (symbol-name kwd) 1)))
+          (setq props (plist-put props (or prop kwd) (nth 1 args))))
         (setq args (cddr args))))
-    (append (if type
-                (list* :type type props)
-              props) args)))
+    (when type (setq props (plist-put props :type type)))
+    (let* ((package (symbol-name name))
+           (source (append (el-get-bundle-parse-name name)
+                           props
+                           (and el-get-cask-compatible-mode
+                                (ignore-errors (el-get-package-def package))))))
+      (unless (plist-get source :type)
+        (setq source (list* :type (el-get-bundle-guess-type source) source)))
+      (setq source (append source args))
+      source)))
 
 (defun el-get-cask--dsl-func-pair (name)
   `((symbol-function ',name)
@@ -115,7 +118,9 @@
       (dolist (source el-get-cask-sources)
         (add-to-list 'package-archives source t))
       (dolist (defs el-get-cask-packages)
-        (eval `(el-get-bundle ,@defs))))))
+        (let* ((args (el-get-cask--args (car defs) (cdr defs)))
+               (name (plist-get args :name)))
+          (eval `(el-get-bundle ,name ,@args)))))))
 
 ;;;###autoload
 (defmacro el-get-cask-source (name-or-alias &optional url)
@@ -134,9 +139,8 @@
 (defmacro el-get-cask-depends-on (name &rest args)
   "Add a dependency."
   (declare (indent 1) (debug 1))
-  (let ((name (if (stringp name) (intern name)
-           (or (and (listp package) (nth 1 package)) package)))
-        (args (el-get-cask--args args)))
+  (let* ((name (if (stringp name) (intern name)
+                 (or (and (listp package) (nth 1 package)) package))))
     `(add-to-list 'el-get-cask-packages '(,name ,@args) t)))
 
 ;;;###autoload

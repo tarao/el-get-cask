@@ -53,7 +53,7 @@
 
 (defvar el-get-cask-sources nil)
 (defvar el-get-cask-packages nil)
-(defvar el-get-cask-compatible-mode nil)
+(defvar el-get-cask-el-get-source nil)
 
 (defun el-get-cask--require-el-get ()
   (let ((el-get-dir (or (bound-and-true-p el-get-dir)
@@ -80,7 +80,7 @@
     (let* ((package (symbol-name name))
            (source (append (el-get-bundle-parse-name name)
                            props
-                           (and el-get-cask-compatible-mode
+                           (and el-get-cask-el-get-source
                                 (ignore-errors (el-get-package-def package))))))
       (unless (plist-get source :type)
         (setq source (list* :type (el-get-bundle-guess-type source) source)))
@@ -107,7 +107,7 @@
          (file (expand-file-name file))
          (base-dir (file-name-directory file))
          (el-get-installed (require 'el-get nil t))
-         (el-get-cask-compatible-mode nil)
+         (el-get-cask-el-get-source nil)
          (el-get-cask-sources nil))
     (el-get-cask-with-dsl (source depends-on
                            files package package-file development)
@@ -128,7 +128,7 @@
   "Add a package mirror named NAME-OR-ALIAS."
   (when (stringp name-or-alias) (setq (intern name-or-alias)))
   (when (listp name-or-alias) (setq (name-or-alias (nth 1 name-or-alias))))
-  (when (eq name-or-alias 'el-get) (setq el-get-cask-compatible-mode t))
+  (when (eq name-or-alias 'el-get) (setq el-get-cask-el-get-source t))
   `(let ((name ',name-or-alias) (url ',url))
      (let ((pair (assq name el-get-cask-source-alist)))
        (when (and (not url) pair)

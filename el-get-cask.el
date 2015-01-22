@@ -140,7 +140,7 @@
   "Add a dependency."
   (declare (indent 1) (debug 1))
   (let* ((name (if (stringp name) (intern name)
-                 (or (and (listp package) (nth 1 package)) package))))
+                 (or (and (listp name) (nth 1 name)) name))))
     `(add-to-list 'el-get-cask-packages '(,name ,@args) t)))
 
 ;;;###autoload

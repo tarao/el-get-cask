@@ -67,6 +67,16 @@
       (eval-print-last-sexp)))
   (require 'el-get-bundle))
 
+(defun el-get-cask--dsl-func-pair (name)
+  `((symbol-function ',name)
+    (symbol-function ',(intern (format "el-get-cask-%s" name)))))
+
+(defmacro el-get-cask-with-dsl (commands &rest form)
+  (declare (indent 1) (debug 1))
+  (let ((pairs (mapcar #'el-get-cask--dsl-func-pair commands)))
+    `(cl-letf (,@pairs)
+       ,@form)))
+
 (defun el-get-cask--args (name args)
   (let (type props)
     (while (keywordp (nth 0 args))
@@ -87,15 +97,42 @@
       (setq source (append source args))
       source)))
 
-(defun el-get-cask--dsl-func-pair (name)
-  `((symbol-function ',name)
-    (symbol-function ',(intern (format "el-get-cask-%s" name)))))
+(defun el-get-cask--elpa-initialize ()
+  (unless package--initialized
+    (package-initialize t))
+  (unless package-archive-contents
+    (package-refresh-contents)))
 
-(defmacro el-get-cask-with-dsl (commands &rest form)
-  (declare (indent 1) (debug 1))
-  (let ((pairs (mapcar #'el-get-cask--dsl-func-pair commands)))
-    `(cl-letf (,@pairs)
-       ,@form)))
+(defun el-get-cask--elpa-dependency (source)
+  (when (and source
+             (eq (plist-get source :type) 'elpa)
+             (not (plist-get source :depends)))
+    (let* ((name (plist-get source :name)))
+      (loop for desc in (package-compute-transaction nil `((,name)))
+            for package = (package-desc-name desc)
+            when (not (eq package name))
+            collect package))))
+
+(defun el-get-cask--elpa-resolve-dependency (elpa-packages source-alist)
+  (let (seen new-packages)
+    (setq new-packages
+          (loop for package in elpa-packages
+                for pair = (assq package source-alist)
+                for source = (cdr pair)
+                for depends = (el-get-cask--elpa-dependency source)
+                do (setcdr pair (plist-put source :depends depends))
+                append (loop for name in depends
+                             unless (or (memq name seen)
+                                        (assq name source-alist))
+                             collect name
+                             and do (add-to-list 'seen name))))
+    (setq source-alist
+          (append (mapcar #'(lambda (x) (cons x `(:name ,x :type elpa)))
+                          new-packages)
+                  source-alist))
+    (if new-packages
+        (el-get-cask--elpa-resolve-dependency new-packages source-alist)
+      source-alist)))
 
 ;;;###autoload
 (defun el-get-cask-load (&optional file)
@@ -118,10 +155,15 @@
       (el-get-cask--require-el-get)
       (dolist (source el-get-cask-sources)
         (add-to-list 'package-archives source t))
-      (dolist (defs el-get-cask-packages)
-        (let* ((args (el-get-cask--args (car defs) (cdr defs)))
-               (name (plist-get args :name)))
-          (eval `(el-get-bundle ,name ,@args)))))))
+      (let* ((alist (loop for defs in el-get-cask-packages
+                          for args = (el-get-cask--args (car defs) (cdr defs))
+                          collect (cons (plist-get args :name) args)))
+             (names (mapcar #'car alist)))
+        (when (loop for pair in alist
+                    thereis (eq (plist-get (cdr pair) :type) 'elpa))
+          (el-get-cask--elpa-initialize))
+        (loop for pair in (el-get-cask--elpa-resolve-dependency names alist)
+              do (eval `(el-get-bundle ,(car pair) ,@(cdr pair))))))))
 
 ;;;###autoload
 (defmacro el-get-cask-source (name-or-alias &optional url)

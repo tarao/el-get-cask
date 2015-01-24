@@ -6,13 +6,22 @@ actually a wrapper to interpret [Cask DSL][DSL] on top of [El-Get][].
 
 ## Installation
 
+To use like [Cask][] do:
+
 ```
 cd ~ && git clone https://github.com/tarao/el-get-cask .el-get-cask
 ```
 
+Or if you are already using [El-Get][], just put this in your Emacs
+init file (after the [El-Get][] installation code):
+
+```lisp
+(el-get-bundle tarao/el-get-cask)
+```
+
 ## Usage
 
-Write the following code into your emacs init file (normally
+Write the following code into your Emacs init file (normally
 `~/.emacs.d/init.el`).
 
 ```lisp
@@ -24,7 +33,7 @@ Write the following code into your emacs init file (normally
 (el-get-cask-load)
 ```
 
-Then, place a file named `Cask` in the directory where your emacs init
+Then, place a file named `Cask` in the directory where your Emacs init
 file is located.  The contents of the file is Cask [DSL][].
 
 Next time you run your Emacs, packages defined in `Cask` file are

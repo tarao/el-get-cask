@@ -64,12 +64,11 @@ one of its depending package is in [El-Get][] recipes, the recipes of
 depending package is not used unless you explicitly `depends-on` the
 depending package.  In this case, if you explicitly `depends-on` the
 depending package with its `:type` not being `elpa`, `package.el` may
-warn you that "Unable to activate package **package**.  Required
-package **depending-package-version** is unavailable".  This is
-because the first package is installed by `package.el` but its
-depending package is installed by the other source (such as `git`).
-Normally, you can ignore this warning since the all packages are
-installed in some way.
+warn you that "Unable to activate package *package*.  Required package
+*depending-package-version* is unavailable".  This is because the
+first package is installed by `package.el` but its depending package
+is installed by the other source (such as `git`).  Normally, you can
+ignore this warning since the all packages are installed in some way.
 
 ## Extended notation
 

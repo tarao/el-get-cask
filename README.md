@@ -60,15 +60,17 @@ available in [El-Get][] recipes, `depends-on` falls back to a
 `package.el` source.
 
 Note that if you `depends-on` a package not in [El-Get][] recipes but
-one of its depending package is in [El-Get][] recipes, the recipes of
+one of its depending packages is in [El-Get][] recipes, the recipe of
 depending package is not used unless you explicitly `depends-on` the
-depending package.  In this case, if you explicitly `depends-on` the
-depending package with its `:type` not being `elpa`, `package.el` may
-warn you that "Unable to activate package *package*.  Required package
+depending package (i.e., the depending package is also installed by
+`package.el`).  If you explicitly `depends-on` the depending package
+with its `:type` not being `elpa`, `package.el` may warn you that
+"Unable to activate package *package*.  Required package
 *depending-package-version* is unavailable".  This is because the
 first package is installed by `package.el` but its depending package
 is installed by the other source (such as `git`).  Normally, you can
-ignore this warning since the all packages are installed in some way.
+ignore this warning since the all packages are installed in some way
+and they will work fine except there is version incompatibility.
 
 ## Extended notation
 

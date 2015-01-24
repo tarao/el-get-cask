@@ -2,7 +2,7 @@ el-get-cask --- [Cask][] interface on [El-Get][]
 ================================================
 
 `el-get-cask` helps migration from [Cask][] to [El-Get][].  It is
-actually a wrapper to interpret [Cask DSL][DSL] by [El-Get][].
+actually a wrapper to interpret [Cask DSL][DSL] on top of [El-Get][].
 
 ## Installation
 
@@ -35,9 +35,9 @@ installed.  You can also use [El-Get][] commands such as
 
 If you are not using [El-Get][] directly, all the packages are
 installed in `.el-get-cask` directory under the same directory where
-`Cask` file is located.  `el-get-dir` variable is overridden to this
-directory to make [El-Get][] work.  In this case, packages maintained
-by `package.el` are installed in `.el-get-cask/elpa` and
+`Cask` file is located.  `el-get-dir` variable is overridden to
+`.el-get-cask` to make [El-Get][] work.  In this case, packages
+maintained by `package.el` are installed in `.el-get-cask/elpa` and
 `package-user-dir` variable is overriden to this directory.
 
 Otherwise, if you have [El-Get][] installed before loading

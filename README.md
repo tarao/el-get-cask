@@ -92,8 +92,10 @@ the detail.
 ## Limitations
 
 - Only `source` and `depends-on` are supported in DSL.
-- There is no CLI interface.  Use commands of [El-Get][].
+- This package does no provide CLI.  Use commands of [El-Get][] by
+  `M-x` on Emacs or try [el-get-cli][] for install/update by commands.
 
 [El-Get]: http://github.com/dimitri/el-get
 [Cask]: http://cask.github.io/
 [DSL]: http://cask.github.io/dsl.html
+[el-get-cli]: https://github.com/tarao/el-get-cli
